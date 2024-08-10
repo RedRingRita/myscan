@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Fonction pour afficher le spinner
+show_spinner() {
+    local pid=$! #$! est une variable spéciale qui contient le PID du dernier processus éxecuté en arrière plan
+    local delay=0.1
+    local spinner='|/-\'
+    while [ -d /proc/$pid ]; do
+        for i in $(seq 0 3); do
+            printf "\r[%c] " "${spinner:$i:1}"
+            sleep $delay
+        done
+    done
+    printf "\r    \r"  # Efface le spinner après la fin de la tâche
+  }
+
+myping() {
+#Vérifie si un argument est passé en paramètre du script.
+if [ "$#" -ne 1 ]; then
+    echo "ERREUR : $0 à besoin d'une adresse comme paramètre pour se lancer"
+    exit 1
+fi
+
+  #Récupère la valeur du premier argument du script
+  address="$1"
+
+  #lance la commande ping et redirige son output dans une variable.
+  ping_output=$(ping -c 10 "$address")
+  avg_time=$(echo "$ping_output" | grep min/avg | cut -d '/' -f 6)
+  pckt_sent=$(echo "$ping_output" | grep "packets transmitted" | cut -d ' ' -f 1)
+  pckt_rcvd=$(echo "$ping_output" | grep "packets transmitted" | cut -d ' ' -f 4)
+  pckt_loss=$(echo "$ping_output" | grep "packets transmitted" | cut -d ' ' -f 6)
+  total_time=$(echo "$ping_output" | grep "packets transmitted" | cut -d ' ' -f 10)
+
+  #Affiche le résultat de la commande
+  echo -e "\n$pckt_sent paquets envoyés, $pckt_rcvd paquets reçus, $pckt_loss de paquets perdus, temps total : $total_time"
+  echo "Temps moyen d'envoi des paquets : $avg_time"ms
+}
+
+mycurl() {
+if curl --connect-timeout 3 -s $1:80 > /dev/null; then
+    echo "Connexion réussie au port 80 sur $1"
+else
+    echo "Échec de la connexion au port 80 sur $1"
+fi
+}
+
+myping $1 & # & sert à mettre la commande en arrière plan
+show_spinner $pid
+mycurl $1
+hops=$(traceroute "$1" | wc -l)
+echo "Nombre de sauts : $hops"
+echo "Temps d'exécution du script : $SECONDS secondes"
