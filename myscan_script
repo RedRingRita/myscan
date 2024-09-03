@@ -14,12 +14,14 @@ show_spinner() {
     printf "\r    \r"  # Efface le spinner après la fin de la tâche
   }
 
-myping() {
 #Vérifie si un argument est passé en paramètre du script.
 if [ "$#" -ne 1 ]; then
     echo "ERREUR : $0 à besoin d'une adresse comme paramètre pour se lancer"
     exit 1
 fi
+
+myping() {
+
 
   #Récupère la valeur du premier argument du script
   address="$1"
@@ -38,14 +40,14 @@ fi
 }
 
 mycurl() {
-if curl --connect-timeout 3 -s $1:80 > /dev/null; then
+if curl --connect-timeout 3 -s $1:80 > /dev/null; then #ajoute :80 à mon paramètre pour vérifier la connectivité au port http
     echo "Connexion réussie au port 80 sur $1"
 else
     echo "Échec de la connexion au port 80 sur $1"
 fi
 }
 
-myping $1 & # & sert à mettre la commande en arrière plan
+myping $1 & # "&" sert à mettre la commande en arrière plan
 show_spinner $pid
 mycurl $1
 hops=$(traceroute "$1" | wc -l)
